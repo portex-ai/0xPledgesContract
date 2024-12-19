@@ -50,10 +50,13 @@ contract PortexPledge {
 
         uint256 balance = address(this).balance - oracleFee;
         address recipient = _result ? deployer : beneficiary;
-        payable(recipient).transfer(balance);
+
+        (bool successToRecipient, ) = payable(recipient).call{value: balance}("");
+        require(successToRecipient, "Transfer to recipient failed.");
         emit FundsWithdrawn(recipient, balance);
 
-        payable(oracle).transfer(oracleFee);
+        (bool successToOracle, ) = payable(oracle).call{value: oracleFee}("");
+        require(successToOracle, "Transfer to oracle failed.");
         emit PledgeVerified(_result, oracle);
     }
 
@@ -62,7 +65,8 @@ contract PortexPledge {
         require(!verified, "Pledge already verified");
 
         uint256 balance = address(this).balance;
-        payable(deployer).transfer(balance);
+        (bool success, ) = payable(deployer).call{value: balance}("");
+        require(success, "Transfer to deployer failed.");
         emit FundsWithdrawn(deployer, balance);
     }
 }

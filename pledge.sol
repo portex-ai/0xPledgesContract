@@ -7,7 +7,7 @@ contract PortexPledge {
     address public immutable oracle;
     uint256 public immutable expirationBlock;
     uint256 public expirationBlockBuffer;
-    string public appId; 
+    string public appId;
     uint256 public amount;
     uint256 public oracleFee;
     bool public verified;
@@ -41,8 +41,8 @@ contract PortexPledge {
     }
 
     function verifyPledge(bool _result) external onlyOracle {
-        require(block.number >= expirationBlock, "Pledge has not expired yet");
-        require(block.number <= expirationBlock + expirationBlockBuffer, "Verification period has expired");
+        require(block.timestamp >= expirationBlock, "Pledge has not expired yet");
+        require(block.timestamp <= expirationBlock + expirationBlockBuffer, "Verification period has expired");
         require(!verified, "Pledge already verified");
 
         verified = true;
@@ -61,7 +61,7 @@ contract PortexPledge {
     }
 
     function withdraw() external onlyDeployer {
-        require(block.number > expirationBlock + expirationBlockBuffer, "Cannot withdraw before verification period ends");
+        require(block.timestamp > expirationBlock + expirationBlockBuffer, "Cannot withdraw before verification period ends");
         require(!verified, "Pledge already verified");
 
         uint256 balance = address(this).balance;

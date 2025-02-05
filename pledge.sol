@@ -5,29 +5,29 @@ contract PortexPledge {
     address public immutable deployer;
     address public immutable beneficiary;
     address public immutable oracle;
-    uint256 public immutable expirationBlock;
-    uint256 public expirationBlockBuffer;
+    uint256 public immutable expirationTimestamp;
+    uint256 public expirationBuffer;
     string public appId;
     uint256 public amount;
     uint256 public oracleFee;
     bool public verified;
     bool public result;
 
-    event PledgeCreated(address indexed deployer, address indexed beneficiary, address indexed oracle, uint256 expirationBlock, uint256 amount, string appId, uint256 oracleFee);
+    event PledgeCreated(address indexed deployer, address indexed beneficiary, address indexed oracle, uint256 expirationTimestamp, uint256 amount, string appId, uint256 oracleFee);
     event PledgeVerified(bool result, address indexed oracle);
     event FundsWithdrawn(address indexed recipient, uint256 amount);
 
-    constructor(uint256 _expirationBlock, uint256 _expirationBlockBuffer, address _beneficiary, address _oracle, string memory _appId, uint256 _oracleFee) payable {
+    constructor(uint256 _expirationTimestamp, uint256 _expirationBuffer, address _beneficiary, address _oracle, string memory _appId, uint256 _oracleFee) payable {
         require(msg.value >= _oracleFee, "Insufficient funds to cover oracle fee");
         deployer = msg.sender;
         amount = msg.value;
         beneficiary = _beneficiary;
         oracle = _oracle;
-        expirationBlock = _expirationBlock;
-        expirationBlockBuffer = _expirationBlockBuffer;
+        expirationTimestamp = _expirationTimestamp;
+        expirationBuffer = _expirationBuffer;
         appId = _appId;
         oracleFee = _oracleFee; 
-        emit PledgeCreated(deployer, beneficiary, oracle, expirationBlock, amount, appId, oracleFee);
+        emit PledgeCreated(deployer, beneficiary, oracle, expirationTimestamp, amount, appId, oracleFee);
     }
 
     modifier onlyOracle() {
@@ -41,8 +41,8 @@ contract PortexPledge {
     }
 
     function verifyPledge(bool _result) external onlyOracle {
-        require(block.timestamp >= expirationBlock, "Pledge has not expired yet");
-        require(block.timestamp <= expirationBlock + expirationBlockBuffer, "Verification period has expired");
+        require(block.timestamp >= expirationTimestamp, "Pledge has not expired yet");
+        require(block.timestamp <= expirationTimestamp + expirationBuffer, "Verification period has expired");
         require(!verified, "Pledge already verified");
 
         verified = true;
@@ -61,7 +61,7 @@ contract PortexPledge {
     }
 
     function withdraw() external onlyDeployer {
-        require(block.timestamp > expirationBlock + expirationBlockBuffer, "Cannot withdraw before verification period ends");
+        require(block.timestamp > expirationTimestamp + expirationBuffer, "Cannot withdraw before verification period ends");
         require(!verified, "Pledge already verified");
 
         uint256 balance = address(this).balance;
